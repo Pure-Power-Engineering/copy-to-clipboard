@@ -1,42 +1,52 @@
 <html>
   <head>
     <script>
-      window.onload = function(){
-        const url = new URL(window.location.href)
-        var text;
-        if(url.searchParams.has("copy")){
-          text = url.searchParams.get("copy")
-          bodyText = "Copied text \"" + text + "\" to the clipboard."
-          var success;
+      window.onload = async function () {
+        const url = new URL(window.location.href);
+        let bodyText;
+        let success = false;
+
+        if (url.searchParams.has("copy")) {
+          // Raw SharePoint FileRef (e.g. /sites/.../Shared Documents/File Name.docx)
+          const rawPath = url.searchParams.get("copy");
+
+          // 1. Build absolute URL
+          const absoluteUrl = "https://yourtenant.sharepoint.com" + rawPath;
+
+          // 2. Properly encode it (spaces → %20, etc.)
+          const encodedUrl = encodeURI(absoluteUrl);
+
+          bodyText = `Copied encoded URL: ${encodedUrl}`;
+
           try {
-            navigator.clipboard.writeText(text)
-            success = true
+            // 3. Copy encoded URL to clipboard
+            await navigator.clipboard.writeText(encodedUrl);
+            success = true;
           } catch (e) {
-            bodyText = "Failed to set text to clipboard. Copy it manually: " + text
-            success = false
+            bodyText =
+              "Failed to copy automatically. Copy manually: " + encodedUrl;
+            success = false;
           }
         } else {
-          bodyText = "No \"copy\" parameter applied to URL."
-          success = false
+          bodyText = 'No "copy" parameter applied to URL.';
+          success = false;
         }
-        
+
+        // Display status message
         const textnode = document.createTextNode(bodyText);
         document.body.appendChild(textnode);
 
-        if(success){
-          window.setTimeout(async function(){
-            if (await navigator.clipboard.readText() == text){
-              window.close()
+        // Try to close the window after successful copy
+        if (success) {
+          window.setTimeout(async function () {
+            const currentClipboard = await navigator.clipboard.readText();
+            if (currentClipboard === encodeURI("https://ppepvp.sharepoint.com" + url.searchParams.get("copy"))) {
+              window.close();
             }
-          }, 500)
+          }, 500);
         }
-      }
+      };
     </script>
   </head>
-  <body>
-    
-  </body>
+  <body></body>
 </html>
-</body>
-</html>
-
