@@ -1,41 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Copy to Clipboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding: 16px;
-    }
-  </style>
-</head>
-<body>
-  <p id="status">Copying to clipboard…</p>
+<html>
+  <head>
+    <script>
+      window.onload = function(){
+        const url = new URL(window.location.href)
+        var text;
+        if(url.searchParams.has("copy")){
+          text = url.searchParams.get("copy")
+          bodyText = "Copied text \"" + text + "\" to the clipboard."
+          var success;
+          try {
+            navigator.clipboard.writeText(text)
+            success = true
+          } catch (e) {
+            bodyText = "Failed to set text to clipboard. Copy it manually: " + text
+            success = false
+          }
+        } else {
+          bodyText = "No \"copy\" parameter applied to URL."
+          success = false
+        }
+        
+        const textnode = document.createTextNode(bodyText);
+        document.body.appendChild(textnode);
 
-  <script>
-    // Read ?copy=... from query string
-    const params = new URLSearchParams(window.location.search);
-    const value = params.get("copy");
-    const status = document.getElementById("status");
-
-    if (!value) {
-      status.textContent = "No 'copy' parameter found in the URL.";
-    } else if (!navigator.clipboard) {
-      status.textContent = "Clipboard API not available in this browser.";
-    } else {
-      navigator.clipboard.writeText(value)
-        .then(() => {
-          status.textContent = "Copied to clipboard. You can paste it now.";
-          // Optional: try to close the tab after a short delay
-          setTimeout(() => window.close(), 1500);
-        })
-        .catch(err => {
-          status.textContent = "Could not copy to clipboard: " + err;
-        });
-    }
-  </script>
+        if(success){
+          window.setTimeout(async function(){
+            if (await navigator.clipboard.readText() == text){
+              window.close()
+            }
+          }, 1000)
+        }
+      }
+    </script>
+  </head>
+  <body>
+    
+  </body>
+</html>
 </body>
 </html>
 
