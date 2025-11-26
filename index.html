@@ -29,12 +29,15 @@
             absoluteUrl = rawPath;
           } else {
             absoluteUrl = tenantBase + rawPath;
-          }
+                  }
 
-          // For Office docs, force open-in-browser with ?web=1
+          // Patterns
           const officeExtPattern = /\.(docx?|pptx?|xlsx?)($|\?)/i;
+          const videoExtPattern = /\.mp4($|\?)/i;
+
+          // For Office docs and MP4, force open-in-browser (Stream/file viewer) with ?web=1
           let finalUrl = absoluteUrl;
-          if (officeExtPattern.test(absoluteUrl)) {
+          if (officeExtPattern.test(absoluteUrl) || videoExtPattern.test(absoluteUrl)) {
             finalUrl += finalUrl.includes('?') ? '&web=1' : '?web=1';
           }
 
