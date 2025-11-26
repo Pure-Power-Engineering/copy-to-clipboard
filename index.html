@@ -5,18 +5,25 @@
     <title>Copy SharePoint Link</title>
     <script>
       window.addEventListener('load', async () => {
-        const url = new URL(window.location.href);
+        const href = window.location.href;
+        const marker = '?copy=';
         let bodyText;
         let success = false;
         let copiedValue = '';
 
-        if (url.searchParams.has('copy')) {
-          const rawPath = url.searchParams.get('copy'); // what SP passed
+        const idx = href.indexOf(marker);
+
+        if (idx !== -1) {
+          // Everything after "?copy=" (including any & or other characters)
+          let rawPath = href.substring(idx + marker.length);
+
+          // Decode any %xx that might already be there
+          rawPath = decodeURIComponent(rawPath);
 
           const tenantBase = 'https://purepower.sharepoint.com';
 
           // If rawPath is already an absolute URL, use it as-is.
-          // Otherwise, treat it as a server-relative path and prepend the tenant.
+          // Otherwise, treat it as a server-relative path.
           let absoluteUrl;
           if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
             absoluteUrl = rawPath;
@@ -25,10 +32,9 @@
           }
 
           // For Office docs, force open-in-browser with ?web=1
-          const officeExtPattern = /\.(docx?|pptx?|xlsx?)$/i;
+          const officeExtPattern = /\.(docx?|pptx?|xlsx?)($|\?)/i;
           let finalUrl = absoluteUrl;
-          if (officeExtPattern.test(rawPath)) {
-            // If there's already a query string, append with & instead of ?
+          if (officeExtPattern.test(absoluteUrl)) {
             finalUrl += finalUrl.includes('?') ? '&web=1' : '?web=1';
           }
 
@@ -50,11 +56,11 @@
           bodyText = 'No "copy" parameter applied to URL.';
         }
 
-        // Show message
+        // Show status on the page
         const textnode = document.createTextNode(bodyText);
         document.body.appendChild(textnode);
 
-        // Best-effort close
+        // Best-effort: close the tab if clipboard still matches our value
         if (success && copiedValue) {
           setTimeout(async () => {
             try {
@@ -63,12 +69,13 @@
                 window.close();
               }
             } catch (e) {
-              // ignore
+              // ignore; user can just close the tab
             }
-          }, 750);
+          }, 500);
         }
       });
     </script>
   </head>
   <body></body>
 </html>
+
